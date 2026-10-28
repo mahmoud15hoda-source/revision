@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تحدي الشبكة – الوحدة الأولى | تكنولوجيا المعلومات والاتصالات – الصف السادس</title>
+<style>
+:root{--ink:#101936;--ink2:#1b2652;--line:#2e3b75;--sky:#27c1f0;--sun:#ffb81f;--mint:#2bd39b;--coral:#ff5a6a;--txt:#f2f5ff;--mut:#a9b4e0}
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{background:radial-gradient(1200px 500px at 50% -10%,#24337a,var(--ink));color:var(--txt);font-family:Tahoma,"Segoe UI","Noto Naskh Arabic",Arial,sans-serif;line-height:1.7;padding:16px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:clamp(28px,6vw,42px);line-height:1.3}
+h2{font-size:22px;margin-bottom:8px}
+.sub{color:var(--mut);margin:6px 0 20px}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.lesson{background:var(--ink2);border:2px solid var(--line);border-radius:14px;padding:14px;text-align:right;transition:transform .15s,border-color .15s}
+.lesson:hover{transform:translateY(-3px);border-color:var(--sky)}
+.lesson b{display:block;font-size:17px}
+.lesson small{color:var(--mut)}
+.lesson .best{color:var(--sun);font-size:14px;margin-top:4px;display:block;min-height:22px}
+.all{grid-column:1/-1;background:linear-gradient(90deg,var(--sky),var(--mint));color:var(--ink);border:0;font-weight:700;text-align:center}
+.all small{color:#0b2a3a}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-weight:700}
+.hud span{background:var(--ink2);border-radius:999px;padding:4px 14px}
+.path{display:flex;align-items:center;margin:6px 0 18px}
+.node{width:16px;height:16px;border-radius:50%;background:var(--line);flex:none;transition:background .3s}
+.node.ok{background:var(--mint)}.node.bad{background:var(--coral)}.node.now{background:var(--sun);box-shadow:0 0 0 5px #ffb81f33}
+.wire{height:3px;background:var(--line);flex:1}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:16px}
+.bar i{display:block;height:100%;width:100%;background:var(--sky);transform-origin:right;transition:transform 1s linear}
+.q{font-size:clamp(20px,4.5vw,26px);font-weight:700;margin-bottom:16px;line-height:1.6}
+.opts{display:grid;gap:10px}
+.opt{background:var(--ink2);border:2px solid var(--line);border-radius:12px;padding:12px 16px;text-align:right;font-size:18px;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--sky)}
+.opt.right{background:#0f4b3b;border-color:var(--mint)}
+.opt.wrong{background:#591f2b;border-color:var(--coral)}
+.opt:disabled{cursor:default}
+.fb{margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--ink2);border-right:5px solid var(--sky);min-height:60px}
+.fb.good{border-color:var(--mint)}.fb.no{border-color:var(--coral)}
+.btn{background:var(--sun);color:#2a1d00;font-weight:700;border-radius:12px;padding:10px 26px;margin-top:14px;font-size:18px}
+.ghost{background:transparent;color:var(--mut);text-decoration:underline;font-size:15px;padding:6px}
+.end{text-align:center;padding-top:20px}
+.stars{font-size:52px;letter-spacing:8px;margin:8px 0}
+.big{font-size:44px;font-weight:700;color:var(--sun)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+
+<section id="menu">
+  <h1>تحدي الشبكة 🌐</h1>
+  <p class="sub">الوحدة الأولى: دور تكنولوجيا المعلومات في حياتنا — اختر درسًا وابدأ التحدي. لديك 3 قلوب و15 ثانية لكل سؤال.</p>
+  <div class="grid" id="lessons"></div>
+</section>
+
+<section id="game" hidden>
+  <div class="hud"><span id="lv"></span><span id="hearts"></span><span id="score"></span></div>
+  <div class="path" id="path"></div>
+  <div class="bar"><i id="timer"></i></div>
+  <div class="q" id="q"></div>
+  <div class="opts" id="opts"></div>
+  <div class="fb" id="fb" aria-live="polite"></div>
+  <button class="btn" id="next" hidden>السؤال التالي</button>
+  <div><button class="ghost" id="quit">العودة للقائمة</button></div>
+</section>
+
+<section id="end" class="end" hidden>
+  <h2 id="etitle"></h2>
+  <div class="stars" id="stars"></div>
+  <div class="big" id="escore"></div>
+  <p class="sub" id="emsg"></p>
+  <button class="btn" id="again">إعادة المحاولة</button>
+  <button class="btn" id="home" style="background:var(--sky);color:var(--ink)">القائمة</button>
+</section>
+
+</main>
+<script>
+const T=["شبكات الكمبيوتر","التكنولوجيا المستقبلية","التكنولوجيا لذوي الاحتياجات الخاصة","أدوات البحث الرقمي","أنظمة تشغيل الأجهزة","أنا مصمم مواقع إنترنت"];
+const TF=["صح","خطأ"];
+// [رقم الدرس, السؤال, الاختيارات, رقم الإجابة الصحيحة, التفسير]
+const Q=[
+[0,"أي جهاز يحوّل الإشارة القادمة من مزوّد الخدمة ISP إلى إشارة رقمية؟",["Port","Switch","Modem","Wi-Fi"],2,"المودم هو الذي يوصّل الإنترنت بمنزلك ويحوّل الإشارة إلى رقمية."],
+[0,"أي جهاز يوزّع الإنترنت في كل مكان بالمنزل سواء بالأسلاك أو بالواي فاي؟",["الراوتر","المودم","الفأرة","الطابعة"],0,"الراوتر يوزّع الإنترنت سلكيًا أو لاسلكيًا."],
+[0,"ISP هو اختصار لـ…",["نظام التشغيل","مزوّد خدمة الإنترنت","منفذ توصيل","شبكة محلية"],1,"مزوّد الخدمة هو الشركة التي تعطيك خدمة الإنترنت."],
+[0,"شبكة أجهزة الكمبيوتر في المعمل المتصلة بكابل هي شبكة LAN (سلكية).",TF,0,"الشبكة المحلية LAN تربط الأجهزة بكابل توصيل."],
+[0,"عند مشاهدة فيديو، يصل الفيديو من مزوّد الخدمة إلى المودم ثم إلى…",["الراوتر ثم جهازك","الطابعة","لوحة المفاتيح","الشاشة مباشرة"],0,"المودم يرسل الفيديو إلى الراوتر، والراوتر يرسله إلى جهازك."],
+[0,"الأسلاك الخاصة تدخل في فتحات في الأجهزة تسمى…",["محولات","منافذ Ports","وسوم","سحابة"],1,"الفتحات التي تدخل فيها الأسلاك اسمها منافذ."],
+
+[1,"بيئة افتراضية ثلاثية الأبعاد تدخلها بارتداء نظارة خاصة تسمى…",["الواقع المعزز","الواقع الافتراضي VR","المحولات","البلوتوث"],1,"الواقع الافتراضي يجعلك تشعر أنك داخل عالم خيالي."],
+[1,"أي تقنية تجمع بين العالم الحقيقي والعالم الافتراضي؟",["المودم","البصمة الرقمية","الواقع المعزز AR","الراوتر"],2,"الواقع المعزز يضيف نماذج ثلاثية الأبعاد إلى عالمنا الحقيقي."],
+[1,"فتح الهاتف بنظام التعرف على الوجه يستخدم…",["الذكاء الاصطناعي","الراوتر","المحولات","الواقع الافتراضي"],0,"التعرف على الوجه أحد استخدامات الذكاء الاصطناعي."],
+[1,"ألعاب الهاتف التي تضع شخصيات كرتونية في المكان الحقيقي الذي أنت فيه تستخدم الواقع المعزز.",TF,0,"هذا مثال مباشر على الواقع المعزز."],
+[1,"الذكاء الاصطناعي يعني أن الآلات…",["لا تتعلم أبدًا","تفكر وتتصرف مثل الإنسان","تعمل بدون كهرباء","تعمل بالأسلاك فقط"],1,"يمكن للآلة أن تتعلم من المعلومات وتساعدنا في مهام كثيرة."],
+[1,"توقّع الهاتف الذكي للكلمة التي ستكتبها مثال على…",["الواقع الافتراضي","المودم","الذكاء الاصطناعي","الشبكة المحلية"],2,"الهاتف يتعلم من الكلمات التي كتبتها من قبل."],
+
+[2,"لوحة مفاتيح «برايل» تساعد…",["المكفوفين على القراءة والكتابة","اللاعبين فقط","المصممين فقط","الأجهزة على الاتصال"],0,"برايل تساعد المكفوفين على الكتابة والقراءة بسهولة."],
+[2,"«تجربة المستخدم» User Experience تعني…",["سعر الجهاز","كيف يشعر الشخص عند استخدام منتج أو جهاز","لون الجهاز","سرعة الإنترنت"],1,"هي وصف لكيفية استخدام الناس للأجهزة والتفاعل معها."],
+[2,"تكبير الخط والأوامر الصوتية في الهاتف تفيد من يعانون من…",["ضعف البصر أو صعوبة استخدام اليدين","ارتفاع الصوت","بطء الإنترنت","نفاد الشحن"],0,"هذه الخصائص تسهّل الاستخدام على ذوي الاحتياجات الخاصة."],
+[2,"عند تقييم أي جهاز تكنولوجي ننظر إلى إيجابياته فقط.",TF,1,"نقيّم الإيجابيات والسلبيات معًا، مثل سعر الروبوت المنزلي المرتفع."],
+[2,"من أهداف تجربة مستخدمي التكنولوجيا…",["صعوبة الوصول للأجهزة","تحسين استقلالية الأفراد","تقليل الفائدة","تعقيد الاستخدام"],1,"نريد أن تحسّن التكنولوجيا حياة ذوي الاحتياجات الخاصة وتزيد استقلاليتهم."],
+[2,"يجب على مصمم التكنولوجيا أن يفكر فقط في احتياجات المستخدمين الأصحاء.",TF,1,"يجب أن يفكر في كيف سيستخدمها الجميع."],
+
+[3,"أي أداة تبحث بها عن كتاب موجود في مكتبة الإسكندرية؟",["فهرس مكتبة الإسكندرية","متجر ألعاب","الراوتر","نظام تشغيل"],0,"الفهرس قاعدة بيانات تضم كل مصادر المكتبة."],
+[3,"اختصار النسخ Copy على لوحة المفاتيح هو…",["Ctrl + V","Ctrl + X","Ctrl + C","Ctrl + Z"],2,"Ctrl+C للنسخ، وCtrl+X للقص، وCtrl+V للصق."],
+[3,"اختصار اللصق Paste هو…",["Ctrl + V","Ctrl + C","Ctrl + X","Ctrl + P"],0,"بعد النسخ أو القص اضغط Ctrl+V لوضعه في مكان جديد."],
+[3,"بنك المعرفة المصري EKB مثال لقاعدة بيانات عامة كبيرة.",TF,0,"EKB يشبه مكتبة رقمية بها معلومات مفيدة للدراسة."],
+[3,"البحث عبر الإنترنت (مثل جوجل) قد يعطيك معلومات…",["دائمًا صحيحة","غير مؤكدة، لذلك نكون حذرين","ممنوعة","بدون كلمات"],1,"ليست كل معلومات الإنترنت مؤكدة، فتأكد من المصدر."],
+[3,"اختصار القص Cut (نقل الشيء من مكانه) هو…",["Ctrl + C","Ctrl + V","Ctrl + A","Ctrl + X"],3,"Ctrl+X ينقل الشيء من مكانه الأصلي."],
+
+[4,"نظام التشغيل هو…",["لعبة","البرنامج الرئيسي الذي يدير كل شيء في الجهاز","موقع إنترنت","كابل توصيل"],1,"هو المدير الذي يجعل أجزاء الجهاز تعمل معًا في تناغم."],
+[4,"أي نظام تشغيل مفتوح المصدر؟",["iOS","Windows","macOS","Android"],3,"أندرويد يمكن لأي شخص رؤية كوده البرمجي وتعديله."],
+[4,"نظام iOS من آبل نظام مغلق المصدر.",TF,0,"لا يعدّله إلا الشركة المالكة، ويتميّز بأنه آمن جدًا."],
+[4,"نظام التشغيل macOS يعمل على…",["هواتف أندرويد","أجهزة آبل MacBook وiMac","الراوتر","الطابعة"],1,"macOS هو نظام تشغيل أجهزة آبل."],
+[4,"أكثر أنظمة تشغيل الهواتف شيوعًا حول العالم هو Windows.",TF,1,"الأكثر شيوعًا هو Android."],
+[4,"أي نظام هو الأكثر استخدامًا على أجهزة الكمبيوتر المكتبية والمحمولة؟",["Android","Windows","iOS","ROS"],1,"ويندوز من أشهر الأنظمة وأكثرها استخدامًا على الكمبيوتر."],
+
+[5,"HTML هي لغة…",["ترميز لتنظيم محتوى صفحة الويب","لتشغيل الألعاب","لصناعة المودم","لحماية الفيروسات"],0,"HTML لغة ترميز تنظم محتوى صفحات الويب."],
+[5,"الوسم الذي يُكتب بينه أكبر عنوان في الصفحة هو…",["<h6>","<p>","<h1>","<img>"],2,"<h1> أكبر عنوان و<h6> أصغر عنوان."],
+[5,"الوسم المستخدم لإنشاء فقرة نصية هو…",["<p>","<body>","<title>","<head>"],0,"<p> لإنشاء فقرة نصية."],
+[5,"الوسم <body> يحتوي على كل المحتوى الذي يظهر على الصفحة.",TF,0,"النصوص والصور تُكتب داخل <body>."],
+[5,"الامتداد الصحيح لحفظ ملف صفحة الويب هو…",[".html",".txt",".pdf",".doc"],0,"احفظ الملف مثل first_page.html ثم افتحه بالمتصفح."],
+[5,"لإضافة صورة إلى صفحة الويب نستخدم الوسم…",["<strong>","<img>","<i>","<html>"],1,"<img> لإضافة صورة."]
+];
+const $=id=>document.getElementById(id);
+const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let best={};try{best=JSON.parse(localStorage.getItem("net6u1")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("net6u1",JSON.stringify(best))}catch(e){}};
+
+function menu(){
+  $("game").hidden=$("end").hidden=true;$("menu").hidden=false;
+  const L=$("lessons");L.innerHTML="";
+  T.forEach((t,i)=>{
+    const b=document.createElement("button");b.className="lesson";
+    b.innerHTML=`<small>الدرس ${i+1}</small><b>${t}</b><span class="best">${best[i]!=null?"أفضل نتيجة: "+"★".repeat(best[i])+"☆".repeat(3-best[i]):""}</span>`;
+    b.onclick=()=>start(i);L.appendChild(b);
+  });
+  const a=document.createElement("button");a.className="lesson all";
+  a.innerHTML=`<b>تحدي الوحدة كلها ⚡</b><small>10 أسئلة عشوائية من الدروس الستة</small><span class="best" style="color:var(--ink)">${best.all!=null?"أفضل نتيجة: "+"★".repeat(best.all)+"☆".repeat(3-best.all):""}</span>`;
+  a.onclick=()=>start("all");L.appendChild(a);
+}
+
+let S;
+function start(mode){
+  const pool=mode==="all"?sh(Q).slice(0,10):sh(Q.filter(q=>q[0]===mode));
+  S={mode,qs:pool,i:0,hearts:3,score:0,ok:0,streak:0,res:[],tm:null,left:15,done:false};
+  $("menu").hidden=$("end").hidden=true;$("game").hidden=false;
+  $("lv").textContent=mode==="all"?"تحدي الوحدة":"الدرس "+(mode+1);
+  show();
+}
+function hud(){
+  $("hearts").textContent="❤️".repeat(S.hearts)+"🖤".repeat(3-S.hearts);
+  $("score").textContent="النقاط: "+S.score;
+  $("path").innerHTML=S.qs.map((_,k)=>{
+    const c=k<S.res.length?(S.res[k]?"ok":"bad"):k===S.i?"now":"";
+    return (k?'<div class="wire"></div>':'')+`<div class="node ${c}"></div>`}).join("");
+}
+function show(){
+  const [,q,o,c]=S.qs[S.i];S.done=false;hud();
+  $("q").textContent=q;$("fb").textContent="اختر إجابتك…";$("fb").className="fb";$("next").hidden=true;
+  const box=$("opts");box.innerHTML="";
+  const order=o.length===2?[0,1]:sh([0,1,2,3]);
+  order.forEach(k=>{
+    const b=document.createElement("button");b.className="opt";b.textContent=o[k];b.dataset.k=k;
+    b.onclick=()=>answer(k);box.appendChild(b);
+  });
+  S.left=15;const bar=$("timer");bar.style.transition="none";bar.style.transform="scaleX(1)";
+  void bar.offsetWidth;bar.style.transition="";
+  clearInterval(S.tm);
+  requestAnimationFrame(()=>{bar.style.transition="transform 15s linear";bar.style.transform="scaleX(0)"});
+  S.tm=setInterval(()=>{if(--S.left<=0)answer(-1)},1000);
+}
+function answer(k){
+  if(S.done)return;S.done=true;clearInterval(S.tm);
+  const [,,o,c,why]=S.qs[S.i];const right=k===c;
+  const bar=$("timer");bar.style.transition="none";
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;
+    if(+b.dataset.k===c)b.classList.add("right");
+    else if(+b.dataset.k===k)b.classList.add("wrong")});
+  S.res.push(right);
+  if(right){S.streak++;S.ok++;const bonus=Math.max(0,S.left)+(S.streak>=3?5:0);S.score+=10+bonus;
+    $("fb").textContent="✅ أحسنت! +"+(10+bonus)+" نقطة"+(S.streak>=3?" (سلسلة إجابات صحيحة 🔥)":"")+" — "+why;$("fb").className="fb good"}
+  else{S.streak=0;S.hearts--;
+    $("fb").textContent=(k<0?"⏰ انتهى الوقت! ":"❌ ليست الإجابة الصحيحة. ")+"الصحيح: "+o[c]+" — "+why;$("fb").className="fb no"}
+  hud();
+  const last=S.i===S.qs.length-1||S.hearts===0;
+  $("next").textContent=last?"عرض النتيجة":"السؤال التالي";$("next").hidden=false;$("next").focus();
+}
+$("next").onclick=()=>{
+  if(S.i===S.qs.length-1||S.hearts===0)return finish();
+  S.i++;show();
+};
+function finish(){
+  clearInterval(S.tm);
+  const n=S.qs.length,p=S.ok/n,stars=S.hearts===0?0:p>=.9?3:p>=.7?2:p>=.4?1:0;
+  const key=S.mode;if(stars>(best[key]||0)){best[key]=stars;save()}
+  $("game").hidden=true;$("end").hidden=false;
+  $("etitle").textContent=S.hearts===0?"انتهت القلوب 💔":"انتهى التحدي 🎉";
+  $("stars").textContent="★".repeat(stars)+"☆".repeat(3-stars);
+  $("escore").textContent=S.score+" نقطة";
+  $("emsg").textContent=`أجبت صحيحًا على ${S.ok} من ${S.res.length} أسئلة. `+(stars===3?"ممتاز! أنت بطل الشبكة.":stars>=1?"جيد! راجع الدرس وحاول مرة أخرى للحصول على 3 نجوم.":"لا بأس، راجع الدرس في الكتاب وجرّب من جديد.");
+  $("again").onclick=()=>start(S.mode);
+}
+$("home").onclick=menu;
+$("quit").onclick=()=>{clearInterval(S.tm);menu()};
+menu();
+</script>
+</body>
+</html>
